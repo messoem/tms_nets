@@ -1,4 +1,4 @@
-import tms-nets.utils
+import tms-nets.utils as utils
 
 def get_points(b, t, m, s):
     G = utils.generate_generator_matrices(b, t, m, s)
