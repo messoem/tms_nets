@@ -4,5 +4,5 @@ setup(
     name="tms-nets",
     version="0.1.0",
     packages=find_packages(),
-    install_requires=["numpy", "galois"],
+    install_requires=["numpy", "seaborn", "pandas", "matplotlib", "galois"],
 )
