@@ -1,7 +1,7 @@
 [project]
 name = "tmsnets"
-[tool.setuptools]
-packages = ["tmsnets"]
+[tool.setuptools.packages.find]
+where = ["."]
 version = "0.1.0"
 description = "high-performance implementation (t,m,s)-nets via Niederreiter algorithm"
 authors = [{ name="Arsenii Sychev", email="arseniysychev2015@gmail.com" }]
