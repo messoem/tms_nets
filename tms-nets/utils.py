@@ -62,6 +62,7 @@ def generate_excellent_poly(b, e, s):
 
     for deg in set(e):
         all_irred = list(galois.irreducible_polys(b, deg))
+        all_irred = [p for p in all_irred if p != galois.Poly([1, 0], field=galois.GF(b))]
         if len(all_irred) < e.count(deg):
             raise ValueError(f"Недостаточно неприводимых многочленов степени {deg} в GF({b}) для {e.count(deg)} запросов (доступно {len(all_irred)}).")
         unique_polys[deg] = set(all_irred)
@@ -76,6 +77,7 @@ def generate_excellent_poly(b, e, s):
         pi.append(P)
     
     return pi
+
 
 def generate_recurrent_sequence(poly, u, m):
     """
@@ -92,7 +94,7 @@ def generate_recurrent_sequence(poly, u, m):
 
     # Начальные элементы: e*(u-1) нулей и хотя бы одна единица
     alpha = [GF(0)] * (e * (u - 1))
-    alpha += [GF(1)] + [GF(0)] * (degree - (e * (u - 1)) - 1)
+    alpha += [GF(1)] * (degree - (e * (u - 1)))
 
     while len(alpha) < m + degree:
         acc = GF(0)
@@ -106,7 +108,7 @@ def build_generator_matrix(poly, m):
     Построение одной матрицы Γ[i] для заданного многочлена и параметра m.
     """
     e = poly.degree
-    num_sections = (m + e - 1) // e  # div(m-1, e) + 1
+    num_sections = math.ceil(m / e)  # div(m-1, e) + 1
     
     # Пустая матрица m x m над F_b
     G = np.zeros((m, m), dtype=int)
@@ -123,25 +125,68 @@ def build_generator_matrix(poly, m):
                 G[j, k] = int(alpha[r + k])
     return G
 
-def vecbm(b, m, n):
-    x = []
-    while n >= b:
-        x.append(n%b)
-        n //= b
-    x.append(n)
-    if len(x) < m:
-        while len(x) != m:
-            x.append(0)
-    return np.array(x[:m])
+def generate_generator_matrices(b, t, m, s):
+    """
+    Основная функция для генерации всех s генерирующих матриц Γ[1], ..., Γ[s]
+    """
+    e = e_param(t, m, s)
+    assert e is not None, "Некорректные параметры t, m, s"
 
-print(vecbm(3, 4, 32))
+    pi_list = generate_excellent_poly(b, e, s)
+    print(pi_list)
+    matrices = []
+    for i in range(s):
+        G = build_generator_matrix(pi_list[i], m)
+        matrices.append(G)
+    
+    return matrices
 
-def rnum(b, v):
-    res = 0
-    m = len(v)
-    for k in range(m):
-        res += v[m-k-1]*b**k
-    return res
+def rnum_opt(b, v):
+    v = np.asarray(v)  # Преобразуем в массив NumPy
+    m = v.shape[1]  # Количество разрядов
+    powers = b ** np.arange(m-1, -1, -1) 
+    print(powers)
+    return np.dot(v, powers)
+
+
+def vecbm_opt(b, m, n):
+    """ Преобразует массив чисел n в их b-ичные представления фиксированной длины m """
+    n = np.asarray(n)  # Поддержка как скаляра, так и массива
+    shape = n.shape  # Запоминаем форму входных данных
+    n = n.ravel()  # Делаем одномерным (если был массив)
+    
+    # Вычисляем b-ичное представление сразу для всех элементов
+    x = (n[:, None] // b**np.arange(m)) % b
+    
+    return x.reshape(*shape, m)
+
+def get_points_opt(b, t, m, s):
+    gf = galois.GF(b)
+    G = generate_generator_matrices(b, t, m, s)
+    print(*G, sep="\n")
+    # (s, m, m)
+    # Создаём матрицу всех возможных векторов vecbm(b, m, n) (размер (b**m, m))
+    n_values = np.arange(b**m)
+    vecs = vecbm_opt(b, m, n_values)  # (b**m, m)
+    # Векторизуем умножение сразу для всех матриц G[i]
+    # Преобразуем в элементы поля Галуа
+    G_gf = gf(G)  # (s, m, m)
+    vecs_gf = gf((vecs.T)[::-1])  # (m, b**m)
+    #print(vecs_gf)
+    result = np.empty((s,m,b**m), dtype=object)
+    for i in range(s):
+        result[i] = G_gf[i] @ vecs_gf  # Умножаем в GF(b)
+    #result = np.dot(G_gf, vecs_gf)
+    #print(result)
+        #print(result[i])
+    #result = gf(result) # Преобразуем обратно в GF(b)
+    #print(result)
+    powers = b ** np.arange(m-1, -1, -1)  # (m,) - степени b с конца
+    rnums = np.tensordot(result, powers, axes=(1, 0))# (s, b**m)
+    #print(rnums)
+    # Получаем точки сразу для всех s
+    points = (rnums.T) * (b**(-m))  # Транспонируем (b**m, s) 
+    return points
 
 
 
