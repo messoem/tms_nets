@@ -1,4 +1,4 @@
-from .core import get_points
-from .utils import get_plot
+from .core import get_points_opt, get_plot, generate_generator_matrices
 
-__all__ = ["get_points", "get_plot"]
+
+__all__ = ["get_points_opt", "get_plot", "generate_generator_matrices"]
