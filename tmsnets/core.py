@@ -150,7 +150,7 @@ def build_generator_matrix(poly, m):
     return G
 
 
-def generate_generator_matrices(b, t, m, s):
+def generate_generator_matrices(b, t, m, s, verbose=100):
     """
     Основная функция для генерации всех s генерирующих матриц Γ[1], ..., Γ[s]
     """
@@ -158,7 +158,8 @@ def generate_generator_matrices(b, t, m, s):
     assert e is not None, "Некорректные параметры t, m, s"
 
     pi_list = generate_excellent_poly(b, e, s)
-    print(pi_list)
+    if verbose==100:
+        print(pi_list)
     matrices = []
     for i in range(s):
         G = build_generator_matrix(pi_list[i], m)
@@ -187,10 +188,10 @@ def vecbm_opt(b, m, n):
     return x.reshape(*shape, m)
 
 
-def get_points_opt(b, t, m, s, verbose=10):
+def get_points_opt(b, t, m, s, verbose=100):
     gf = galois.GF(b)
-    G = generate_generator_matrices(b, t, m, s)
-    if verbose==10:
+    G = generate_generator_matrices(b, t, m, s, verbose)
+    if verbose==100:
         print(*G, sep="\n")
     n_values = np.arange(b**m)
     vecs = vecbm_opt(b, m, n_values)  # (b**m, m)
