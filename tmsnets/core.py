@@ -4,6 +4,7 @@ import galois
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 def get_plot(p):
     if (p.shape)[1] == 2:
@@ -11,16 +12,11 @@ def get_plot(p):
         #print(df)
         sns.scatterplot(df, x="x", y="y").plot()
     elif (p.shape)[1] == 3:
-        fig = plt.figure(figsize=(8, 6))
-        ax = fig.add_subplot(111, projection='3d')
         df = pd.DataFrame(p, columns=["x", "y", "z"])
-        ax.scatter(df['x'], df['y'], df['z'])
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_zlabel('Z-axis')
-        plt.title('3D Scatter Plot with Seaborn')
-        plt.show()
-
+        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(8, 8))
+        fig = px.scatter_3d(df, x='x', y='y', z='z')
+        fig.show()
 
 def e_param(t, m, s):
     n = t + s
@@ -117,7 +113,7 @@ def generate_recurrent_sequence(poly, u, m):
 
     # Начальные элементы: e*(u-1) нулей и хотя бы одна единица
     alpha = [GF(0)] * (e * (u - 1))
-    alpha += [GF(1)] * (degree - (e * (u - 1)))
+    alpha += [GF(1)] + [GF(0)] * (degree - (e * (u - 1)) - 1)
 
     while len(alpha) < m + degree:
         acc = GF(0)
@@ -151,9 +147,7 @@ def build_generator_matrix(poly, m):
 
 
 def generate_generator_matrices(b, t, m, s, verbose=100):
-    """
-    Основная функция для генерации всех s генерирующих матриц Γ[1], ..., Γ[s]
-    """
+    
     e = e_param(t, m, s)
     assert e is not None, "Некорректные параметры t, m, s"
 
@@ -177,7 +171,6 @@ def rnum_opt(b, v):
 
 
 def vecbm_opt(b, m, n):
-    """ Преобразует массив чисел n в их b-ичные представления фиксированной длины m """
     n = np.asarray(n)  # Поддержка как скаляра, так и массива
     shape = n.shape  # Запоминаем форму входных данных
     n = n.ravel()  # Делаем одномерным (если был массив)
