@@ -16,7 +16,8 @@ dependencies = [
     "pandas",
     "matplotlib",
     "seaborn",
-    "galois"
+    "galois", 
+    "plotly"
 ]
 
 [tool.setuptools.packages.find]
