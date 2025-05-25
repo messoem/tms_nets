@@ -182,23 +182,38 @@ def h_net_rosenbloom_tsfasman(q, m, s, beta=None):
     Construction (0, m, s)-nets over GF(q) via Rosenbloom–Tsfasman method.
     """
     GF = galois.GF(q)
+
     if s > q:
-        raise ValueError("Wrong s param (s must be less or equal than q).")
-    elements = [GF(i) for i in range(q)] 
-    S = elements[:s]
+        raise ValueError("Wrong s(s must be less or equal than q)")
+    all_field_elements_gf = GF.elements 
+    S_gf = all_field_elements_gf[:s]
+    is_default_beta = False
     if beta is None:
-        beta = {int(c): int(c) for c in elements} 
-    coeffs_list = list(product(elements, repeat=m))
-    poly_list = [galois.Poly(c[::-1], field=GF) for c in coeffs_list]
-    points = np.zeros((len(poly_list), s), dtype=np.float64)
-    for idx_f, f in enumerate(poly_list):
-        for i, a_i in enumerate(S):
-            coord = 0.0
-            deriv = f
-            for j in range(m):
-                value = deriv(a_i)
-                digit = beta[int(value)]
-                coord += digit * q**(-(j + 1))
-                deriv = deriv.derivative()
-            points[idx_f, i] = coord
+        is_default_beta = True
+    else:
+        beta_keys = np.array(sorted(list(beta.keys())))
+        if np.array_equal(beta_keys, np.arange(q)):
+            beta_lookup_array = np.array([beta[i] for i in range(q)], dtype=np.float64)
+            beta_map_func = lambda x_int_array: beta_lookup_array[x_int_array.astype(np.int64)] 
+        else:
+            _beta_vec = np.vectorize(lambda val_int: beta.get(val_int), otypes=[np.float64])
+            beta_map_func = lambda x_int_array: _beta_vec(x_int_array)
+    coeffs_int_tuples = product(range(q), repeat=m)
+    poly_list = [galois.Poly(list(c_tuple)[::-1], field=GF) for c_tuple in coeffs_int_tuples]
+    num_polynomials = q**m
+    points = np.zeros((num_polynomials, s), dtype=np.float64)
+    q_powers = q**(-(np.arange(m, dtype=np.float64) + 1.0))
+    eval_matrix_int = np.zeros((s, m), dtype=np.int64) 
+    for idx_f, f_poly in enumerate(poly_list):
+        current_deriv_poly = f_poly
+        for j_deriv_order in range(m):
+            eval_results_gf = current_deriv_poly(S_gf)
+            eval_matrix_int[:, j_deriv_order] = eval_results_gf.astype(np.int64)
+            if j_deriv_order < m - 1:
+                current_deriv_poly = current_deriv_poly.derivative()
+        if is_default_beta:
+            digits_matrix = eval_matrix_int.astype(np.float64)
+        else:
+            digits_matrix = beta_map_func(eval_matrix_int)      
+        points[idx_f, :] = np.dot(digits_matrix, q_powers)
     return points
