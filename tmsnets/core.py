@@ -5,6 +5,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
+from itertools import product
 
 def get_plot(p):
     if (p.shape)[1] == 2:
@@ -83,60 +84,42 @@ def generate_excellent_poly(b, e, s):
         all_irred = list(galois.irreducible_polys(b, deg))
         all_irred = [p for p in all_irred if p != galois.Poly([1, 0], field=galois.GF(b))]
         if len(all_irred) < e.count(deg):
-            raise ValueError(f"Недостаточно неприводимых многочленов степени {deg} в GF({b}) для {e.count(deg)} запросов (доступно {len(all_irred)}).")
+            raise ValueError(f"Not enough irreducible polys {deg} over GF({b}) for {e.count(deg)} request (available: {len(all_irred)}).")
         unique_polys[deg] = set(all_irred)
-    
     used = {deg: set() for deg in set(e)}
-
-    for i in range(s):
-        deg = e[i]
-        available = unique_polys[deg] - used[deg]
-        P = available.pop()
+    for deg in e: 
+        available = sorted(unique_polys[deg] - used[deg], key=lambda p: tuple(p.coeffs))
+        P = available[0]  
         used[deg].add(P)
         pi.append(P)
-    
     return pi
 
 
 def generate_recurrent_sequence(poly, u, m):
-    """
-    Генерация линейной рекуррентной последовательности α для секции u с характеристическим многочленом poly^u.
-    """
     e = poly.degree
     degree = e * u
-
     poly_u = poly ** u
-    coeffs = poly_u.coeffs[::-1]
-
-    # Определяем поле
+    coeffs = poly_u.coeffs 
     GF = poly.field
-
-    # Начальные элементы: e*(u-1) нулей и хотя бы одна единица
     alpha = [GF(0)] * (e * (u - 1))
     alpha += [GF(1)] + [GF(0)] * (degree - (e * (u - 1)) - 1)
 
     while len(alpha) < m + degree:
         acc = GF(0)
-        for k in range(degree):
-            acc += coeffs[k] * alpha[-degree + k]
+        for k in range(1, degree + 1):
+            acc -= coeffs[k] * alpha[-k]
         alpha.append(acc)
     return alpha
 
-
 def build_generator_matrix(poly, m):
-    """
-    Построение одной матрицы Γ[i] для заданного многочлена и параметра m.
-    """
     e = poly.degree
-    num_sections = math.ceil(m / e)  # div(m-1, e) + 1
-    
-    # Пустая матрица m x m над F_b
+    num_sections = (m + e - 1) // e  # div(m-1, e) + 1
     G = np.zeros((m, m), dtype=int)
-    
+
     for u in range(1, num_sections + 1):
         alpha = generate_recurrent_sequence(poly, u, m)
         r_h = e - 1 if u < num_sections else (m - 1) % e
-        
+
         for r in range(r_h + 1):
             j = e * (u - 1) + r
             if j >= m:
@@ -147,13 +130,11 @@ def build_generator_matrix(poly, m):
 
 
 def generate_generator_matrices(b, t, m, s, verbose=100):
-    
     e = e_param(t, m, s)
-    assert e is not None, "Некорректные параметры t, m, s"
+    assert e is not None, "Wrong (t, m, s)"
 
     pi_list = generate_excellent_poly(b, e, s)
-    if verbose==100:
-        print(pi_list)
+    print(pi_list)
     matrices = []
     for i in range(s):
         G = build_generator_matrix(pi_list[i], m)
@@ -163,19 +144,17 @@ def generate_generator_matrices(b, t, m, s, verbose=100):
 
 
 def rnum_opt(b, v):
-    v = np.asarray(v)  # Преобразуем в массив NumPy
-    m = v.shape[1]  # Количество разрядов
+    v = np.asarray(v) 
+    m = v.shape[1] 
     powers = b ** np.arange(m-1, -1, -1) 
     print(powers)
     return np.dot(v, powers)
 
 
 def vecbm_opt(b, m, n):
-    n = np.asarray(n)  # Поддержка как скаляра, так и массива
-    shape = n.shape  # Запоминаем форму входных данных
-    n = n.ravel()  # Делаем одномерным (если был массив)
-    
-    # Вычисляем b-ичное представление сразу для всех элементов
+    n = np.asarray(n) 
+    shape = n.shape
+    n = n.ravel() 
     x = (n[:, None] // b**np.arange(m)) % b
     
     return x.reshape(*shape, m)
@@ -192,8 +171,34 @@ def get_points_opt(b, t, m, s, verbose=100):
     vecs_gf = gf((vecs.T)[::-1])  # (m, b**m)
     result = np.empty((s,m,b**m), dtype=object)
     for i in range(s):
-        result[i] = G_gf[i] @ vecs_gf  # Умножаем в GF(b)
-    powers = b ** np.arange(m-1, -1, -1)  # (m,) - степени b с конца
-    rnums = np.tensordot(result, powers, axes=(1, 0))# (s, b**m)
-    points = (rnums.T) * (b**(-m))  # Транспонируем (b**m, s) 
+        result[i] = G_gf[i] @ vecs_gf  
+    powers = b ** np.arange(m-1, -1, -1) 
+    rnums = np.tensordot(result, powers, axes=(1, 0))
+    points = (rnums.T) * (b**(-m))  
+    return points
+
+def h_net_rosenbloom_tsfasman(q, m, s, beta=None):
+    """
+    Construction (0, m, s)-nets over GF(q) via Rosenbloom–Tsfasman method.
+    """
+    GF = galois.GF(q)
+    if s > q:
+        raise ValueError("Wrong s param (s must be less or equal than q).")
+    elements = [GF(i) for i in range(q)] 
+    S = elements[:s]
+    if beta is None:
+        beta = {int(c): int(c) for c in elements} 
+    coeffs_list = list(product(elements, repeat=m))
+    poly_list = [galois.Poly(c[::-1], field=GF) for c in coeffs_list]
+    points = np.zeros((len(poly_list), s), dtype=np.float64)
+    for idx_f, f in enumerate(poly_list):
+        for i, a_i in enumerate(S):
+            coord = 0.0
+            deriv = f
+            for j in range(m):
+                value = deriv(a_i)
+                digit = beta[int(value)]
+                coord += digit * q**(-(j + 1))
+                deriv = deriv.derivative()
+            points[idx_f, i] = coord
     return points
