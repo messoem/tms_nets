@@ -177,7 +177,7 @@ def get_points_opt(b, t, m, s, verbose=100):
     points = (rnums.T) * (b**(-m))  
     return points
 
-def h_net_rosenbloom_tsfasman(q, m, s, beta=None):
+def rosenbloom_tsfasman_net(q, m, s, beta=None):
     """
     Construction (0, m, s)-nets over GF(q) via Rosenbloom–Tsfasman method.
     """
