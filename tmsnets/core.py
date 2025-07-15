@@ -165,7 +165,7 @@ def vecbm_opt(b, m, n):
 def get_points_opt(b, t, m, s, verbose=100):
     gf = galois.GF(b)
     G = generate_generator_matrices(b, t, m, s, verbose)
-    if verbose==100:
+    if verbose==50:
         print(*G, sep="\n")
     n_values = np.arange(b**m)
     vecs = vecbm_opt(b, m, n_values)  # (b**m, m)
