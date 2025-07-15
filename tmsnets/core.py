@@ -5,7 +5,9 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
-from itertools import product
+from itertools import combinations_with_replacement, permutations, product
+from typing import Dict, Tuple, List
+from fractions import Fraction
 
 def get_plot(p):
     if (p.shape)[1] == 2:
@@ -217,3 +219,140 @@ def rosenbloom_tsfasman_net(q, m, s, beta=None):
             digits_matrix = beta_map_func(eval_matrix_int)      
         points[idx_f, :] = np.dot(digits_matrix, q_powers)
     return points
+
+def get_points_opt_custom(G, b, m, s):
+    gf = galois.GF(b)
+
+    # Проверка размера G: ожидается (s, m, m)
+    assert np.array(G).shape == (s, m, m), f"Ожидается форма G: ({s}, {m}, {m}), получено: {G.shape}"
+
+    # Векторы в (b**m, m) представлении
+    n_values = np.arange(b**m)
+    vecs = vecbm_opt(b, m, n_values)  # (b**m, m)
+
+    # Преобразование в GF(b)
+    G_gf = gf(G)  # (s, m, m)
+    vecs_gf = gf(vecs.T)  # (m, b**m), без реверса!
+
+    # Умножение всех матриц G[i] на вектор vecs_gf
+    result = np.empty((s, m, b**m), dtype=gf)
+    for i in range(s):
+        result[i] = G_gf[i] @ vecs_gf  # (m, b**m)
+
+    # Преобразуем координаты обратно в числа
+    powers = b ** np.arange(m - 1, -1, -1)  # (m,)
+    rnums = np.tensordot(result, powers, axes=(1, 0))  # (s, b**m)
+
+    # Преобразуем в точки на [0,1)^s
+    points = (rnums.T) * (b ** -m)  # (b**m, s)
+
+    return points
+
+def generate_D_A_pairs(t: int, m: int, s: int, b: int) -> Dict[Tuple[int, ...], List[Tuple[int, ...]]]:
+    """
+    Генерирует словарь, где ключом является D, а значением возможные А.
+    """
+    n = m - t
+    D_A_to_index = {}
+
+    D_set = set()
+    for D in combinations_with_replacement(range(n + 1), s):
+        if sum(D) == n:
+            D_set.update(permutations(D))
+
+
+    for D in D_set:
+        A_list = []
+        A_ranges = [range(b ** d_i) for d_i in D]
+        A_list.extend(product(*A_ranges))
+        D_A_to_index[D] = A_list
+
+    return D_A_to_index
+
+def convert_points_to_fractions(points: np.ndarray, b: int, m: int) -> np.ndarray:
+    """
+    Возвращает numpy.ndarray: массив точек с координатами типа Fraction
+    """
+    points_fractions = np.empty(points.shape, dtype=object) 
+    denominator = b ** m  # Используем b^m в качестве знаменателя
+
+    for i, point in enumerate(points):
+        for j, x in enumerate(point):
+            # Пропускаем преобразование, если x уже является дробью
+            if isinstance(x, Fraction):
+                points_fractions[i, j] = x
+                continue
+
+            # Используем точные значения для 0 и 1
+            if x < 1e-10:
+                points_fractions[i, j] = Fraction(0, 1)
+            elif x > 1 - 1e-10:
+                points_fractions[i, j] = Fraction(1, 1)
+            else:
+                # Создаем дробь со знаменателем b^m
+                numerator = int(round(x * denominator))
+                points_fractions[i, j] = Fraction(numerator, denominator).limit_denominator()
+
+    return points_fractions
+
+def check_tms_network(points: np.ndarray, t: int, m: int, s: int, b: int) -> bool:
+    """
+    Проверяет, является ли набор точек (t,m,s)-сетью с основанием b.
+    Возвращает True если points образуют (t,m,s)-сеть, False иначе
+    """
+    points_fractions = convert_points_to_fractions(points, b, m)
+    D_A_to_index = generate_D_A_pairs(t, m, s, b)
+
+    # Создаем словарь для быстрого поиска индексов
+    D_A_indices = {D: {A: i for i, A in enumerate(A_list)}
+                   for D, A_list in D_A_to_index.items()}
+
+    unique_D = list(D_A_to_index.keys())
+    num_D = len(unique_D)
+    max_A_count = max(len(A_list) for A_list in D_A_to_index.values())
+
+    counters = np.zeros((num_D, max_A_count), dtype=np.uint32)
+
+    for point in points_fractions:
+        for d_index, D in enumerate(unique_D):
+            A = tuple(int(point[j] * (b ** D[j])) for j in range(s))
+
+            if all(a < b ** d for a, d in zip(A, D)):
+                if A in D_A_indices[D]:
+                    a_index = D_A_indices[D][A]
+                    counters[d_index, a_index] += 1
+
+    return np.all(counters == b**t)
+
+def rank_GF(A):
+    """
+    Вычисляет ранг матрицы A над конечным полем, используя row-reduction.
+    """
+    R = A.row_reduce()
+    return sum(not np.all(row == 0) for row in R)
+
+def compute_t(C_matrices, b):
+    GF = galois.GF(b)
+    s = len(C_matrices)
+    n, m = C_matrices[0].shape
+
+    for C in C_matrices:
+        assert C.shape == (n, m)
+
+    for d in range(m, 0, -1):
+        all_good = True
+        for combo in itertools.product(range(n + 1), repeat=s):
+            if sum(combo) != d:
+                continue
+
+            rows = []
+            for j in range(s):
+                rows.extend(C_matrices[j][:combo[j], :])
+            A = GF(np.vstack(rows))
+            rank = rank_GF(A)
+            if rank < d:
+                all_good = False
+                break
+        if all_good:
+            return m - d
+    return m
