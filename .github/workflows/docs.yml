@@ -25,13 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
 
-      - name: Run sphinx-apidoc to generate module files
+      - name: Verify file structure
         run: |
-          sphinx-apidoc -o docs/source tmsnets
+          ls -R
 
-      - name: Build docs with sphinx-build
+      - name: Build docs with sphinx-build (Strict Mode)
         run: |
-          sphinx-build -b html docs/source docs/build
+          sphinx-build -b html -v -W docs/source docs/build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
