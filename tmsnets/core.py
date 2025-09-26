@@ -222,7 +222,6 @@ class PolynomialNetConstructor:
     def construct_rosenbloom_tsfasman(q, m, s, beta=None):
         """
         Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.
-
         Due to its combinatorial nature, this method takes a long time to work.
 
         :param q: base of (0, m, s)-net. Using for calculation over GF(q).
