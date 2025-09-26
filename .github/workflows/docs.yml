@@ -1,43 +1,40 @@
 name: Build and Deploy Docs
 
-
 on:
   push:
     branches:
-      - main 
+      - main # Убедитесь, что это ваша основная ветка (может быть 'master')
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Загружаем код из репозитория
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. Устанавливаем Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      # 3. Устанавливаем зависимости для сборки документации
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Путь к файлу зависимостей
           pip install -r docs/requirements.txt
 
       - name: Run sphinx-apidoc
         run: |
-          sphinx-apidoc -o docs/source/ tms_nets
-
+          sphinx-apidoc -o docs/source tmsnets
 
       - name: Build docs
+        # Запускаем сборку HTML из папки 'docs'
         run: |
           make -C docs html
 
-      # 6. Публикуем собранный HTML-сайт на специальную ветку gh-pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Путь к сгенерированной документации
           publish_dir: docs/build/html
