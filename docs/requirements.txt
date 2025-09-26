@@ -1,2 +1,9 @@
 sphinx
 sphinx_rtd_theme
+
+numpy
+galois
+seaborn
+pandas
+matplotlib
+plotly
