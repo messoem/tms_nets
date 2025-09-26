@@ -74,11 +74,139 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="tmsnets-core-module">
-<h2>tmsnets.core module<a class="headerlink" href="#tmsnets-core-module" title="Link to this heading"></a></h2>
+<section id="module-tmsnets.core">
+<span id="tmsnets-core-module"></span><h2>tmsnets.core module<a class="headerlink" href="#module-tmsnets.core" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tmsnets.core.</span></span><span class="sig-name descname"><span class="pre">PolynomialNetConstructor</span></span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class implementing algorithms for constructing (t,m,s)-networks using polynomials over finite fields.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.construct_niederreiter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_niederreiter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_niederreiter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.construct_niederreiter" title="Link to this definition"></a></dt>
+<dd><p>Constructing (t, m, s)-net via Niederreiter algorithm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> – base of (t, m, s)-net. Using for calculation over GF(b).</p></li>
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – the number of points in the (t, m, s)-net is characterized as b^m</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.construct_rosenbloom_tsfasman">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_rosenbloom_tsfasman</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_rosenbloom_tsfasman"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.construct_rosenbloom_tsfasman" title="Link to this definition"></a></dt>
+<dd><p>Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.</p>
+<p>Due to its combinatorial nature, this method takes a long time to work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.is_prime">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_prime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.is_prime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.is_prime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.is_prime_power">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_prime_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.is_prime_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.is_prime_power" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tmsnets.core.TMSNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tmsnets.core.</span></span><span class="sig-name descname"><span class="pre">TMSNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#TMSNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.TMSNet" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for storing, analyzing, and visualizing (t,m,s)-networks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> – base of (t, m, s)-net. Using for calculation over GF(b).</p></li>
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – the number of points in the (t, m, s)-net is characterized as b^m</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.core.TMSNet.visualize">
+<span class="sig-name descname"><span class="pre">visualize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#TMSNet.visualize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.TMSNet.visualize" title="Link to this definition"></a></dt>
+<dd><p>Visualizes network points.
+Supports both 2D and 3D cases.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="module-tmsnets">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tmsnets" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tmsnets.PolynomialNetConstructor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tmsnets.</span></span><span class="sig-name descname"><span class="pre">PolynomialNetConstructor</span></span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.PolynomialNetConstructor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class implementing algorithms for constructing (t,m,s)-networks using polynomials over finite fields.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.PolynomialNetConstructor.construct_niederreiter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_niederreiter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_niederreiter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.PolynomialNetConstructor.construct_niederreiter" title="Link to this definition"></a></dt>
+<dd><p>Constructing (t, m, s)-net via Niederreiter algorithm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> – base of (t, m, s)-net. Using for calculation over GF(b).</p></li>
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – the number of points in the (t, m, s)-net is characterized as b^m</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.PolynomialNetConstructor.construct_rosenbloom_tsfasman">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_rosenbloom_tsfasman</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_rosenbloom_tsfasman"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.PolynomialNetConstructor.construct_rosenbloom_tsfasman" title="Link to this definition"></a></dt>
+<dd><p>Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.</p>
+<p>Due to its combinatorial nature, this method takes a long time to work.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.PolynomialNetConstructor.is_prime">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_prime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.is_prime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.PolynomialNetConstructor.is_prime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.PolynomialNetConstructor.is_prime_power">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_prime_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.is_prime_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.PolynomialNetConstructor.is_prime_power" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tmsnets.TMSNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tmsnets.</span></span><span class="sig-name descname"><span class="pre">TMSNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#TMSNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.TMSNet" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for storing, analyzing, and visualizing (t,m,s)-networks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> – base of (t, m, s)-net. Using for calculation over GF(b).</p></li>
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – the number of points in the (t, m, s)-net is characterized as b^m</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tmsnets.TMSNet.visualize">
+<span class="sig-name descname"><span class="pre">visualize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#TMSNet.visualize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.TMSNet.visualize" title="Link to this definition"></a></dt>
+<dd><p>Visualizes network points.
+Supports both 2D and 3D cases.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
