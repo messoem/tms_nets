@@ -1,0 +1,21 @@
+tmsnets package
+===============
+
+Submodules
+----------
+
+tmsnets.core module
+-------------------
+
+.. automodule:: tmsnets.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: tmsnets
+   :members:
+   :undoc-members:
+   :show-inheritance:
