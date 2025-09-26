@@ -5,11 +5,8 @@ Welcome to tms_nets's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   api 
 
 Indices and tables
 ==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+...
