@@ -140,6 +140,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">PolynomialNetConstructor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class implementing algorithms for constructing (t,m,s)-networks using polynomials over finite fields.</span>
+
+<span class="sd">    Current implementation include Niederreiter algorithm and Rosenbloom-Tsfasman algorithm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="PolynomialNetConstructor.is_prime">
@@ -312,6 +314,9 @@
 <span class="sd">        Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.</span>
 
 <span class="sd">        Due to its combinatorial nature, this method takes a long time to work.</span>
+<span class="sd">        :param q: base of (0, m, s)-net. Using for calculation over GF(q).</span>
+<span class="sd">        :param m: the number of points in the (0, m, s)-net is characterized as q^m</span>
+<span class="sd">        :param s: dimension of (0, m, s)-net</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">GF</span> <span class="o">=</span> <span class="n">galois</span><span class="o">.</span><span class="n">GF</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
 
