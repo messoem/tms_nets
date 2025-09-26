@@ -224,6 +224,7 @@ class PolynomialNetConstructor:
         Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.
 
         Due to its combinatorial nature, this method takes a long time to work.
+
         :param q: base of (0, m, s)-net. Using for calculation over GF(q).
         :param m: the number of points in the (0, m, s)-net is characterized as q^m
         :param s: dimension of (0, m, s)-net
