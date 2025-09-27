@@ -12,36 +12,26 @@ from fractions import Fraction
 def generate_D_vectors(t: int, m: int, s: int) -> np.ndarray:
     """
     Generates all possible integer vectors D = (d_1, ..., d_s) for a (t, m, s)-net.
-    These vectors satisfy d_i >= 0 and sum(d_i) = m - t, and they define the
-    elementary intervals used for the verification check.
+    These vectors satisfy d_i >= 0 and sum(d_i) = m - t, and they define the elementary intervals used for the verification check.
     """
     n = m - t
     D_list = []
-
     for D in combinations_with_replacement(range(n + 1), s):
         if sum(D) == n:
             D_list.extend(set(permutations(D)))
-
     D_array = np.array(D_list)
-    D_array = np.unique(D_array, axis=0)
-    
-    return D_array
+    return np.unique(D_array, axis=0)
 
 def generate_D_A_pairs(t: int, m: int, s: int, b: int) -> Dict[Tuple[int, ...], List[Tuple[int, ...]]]:
     """
-    Generates a dictionary that maps each vector D to a list of all possible
-    corresponding vectors A. For a given D=(d_1, ..., d_s), a vector A is (a_1, ..., a_s) where 0 <= a_j < b^d_j for each j.
+    Generates a dictionary that maps each vector D to a list of all possible corresponding vectors A.
+    For a given D=(d_1, ..., d_s), a vector A is (a_1, ..., a_s) where 0 <= a_j < b^d_j for each j.
     """
     D_array = generate_D_vectors(t, m, s)
-
     D_A_to_index = {}
     for D in D_array:
-        A_list = [] 
         A_ranges = [range(b ** d_i) for d_i in D]
-        for A in product(*A_ranges):
-            A_list.append(A) 
-
-        D_A_to_index[tuple(D)] = A_list 
+        D_A_to_index[tuple(D)] = list(product(*A_ranges))
     return D_A_to_index
 
 def convert_points_to_fractions(points: np.ndarray, b: int) -> np.ndarray:
@@ -51,34 +41,31 @@ def convert_points_to_fractions(points: np.ndarray, b: int) -> np.ndarray:
     """
     points_fractions = []
     for point in points:
-        point_fractions = []
+        point_fractions_row = []
         for x in point:
             if isinstance(x, Fraction):
-                point_fractions.append(x)
+                point_fractions_row.append(x)
+                continue
+            x_float = float(f"{x:.20f}".rstrip('0').rstrip('.'))
+            if x_float < 1e-10:
+                point_fractions_row.append(Fraction(0, 1))
+            elif x_float > 1 - 1e-10:
+                point_fractions_row.append(Fraction(1, 1))
             else:
-                x_str = f"{x:.20f}"
-                x_str = x_str.rstrip('0').rstrip('.')
-                x_float = float(x_str)
-                if x_float < 1e-10:
-                    point_fractions.append(Fraction(0, 1))
-                elif x_float > 1 - 1e-10:
-                    point_fractions.append(Fraction(1, 1))
-                else:
-
-                    found = False
-                    for n in range(1, 15):
-                        denominator = b**n
-                        numerator = int(round(x_float * denominator))
-                        if abs(x_float - numerator / denominator) < 1e-10:
-                            point_fractions.append(Fraction(numerator, denominator))
-                            found = True
-                            break
-                    if not found:
-                        point_fractions.append(Fraction(x_str))
-        points_fractions.append(point_fractions)
+                found = False
+                for n in range(1, 15):
+                    denominator = b**n
+                    numerator = int(round(x_float * denominator))
+                    if abs(x_float - numerator / denominator) < 1e-10:
+                        point_fractions_row.append(Fraction(numerator, denominator))
+                        found = True
+                        break
+                if not found:
+                    point_fractions_row.append(Fraction(str(x_float)))
+        points_fractions.append(point_fractions_row)
     return np.array(points_fractions)
 
-def check_tms_network(points: np.ndarray, t: int, m: int, s: int, b: int) -> bool:
+def _is_tms_network(points_fractions: np.ndarray, t: int, m: int, s: int, b: int) -> bool:
     """
     Checks whether the set of points forms a (t,m,s)-net in base b.
     Returns True if the points form a (t,m,s)-net, False otherwise.
@@ -89,32 +76,18 @@ def check_tms_network(points: np.ndarray, t: int, m: int, s: int, b: int) -> boo
     :param s: The dimension of the net.
     :param b: The base of the (t, m, s)-net.
     """
-
-    if points.shape[0] != b**m:
-        print(f"Error: Expected {b**m} points, but got {points.shape[0]}.")
-        return False
-        
-    points_fractions = convert_points_to_fractions(points, b)
-    
-    D_A_to_index = generate_D_A_pairs(t, m, s, b)
-    
-    unique_D = list(D_A_to_index.keys())
-    for D in unique_D:
-        for A in D_A_to_index[D]:
+    D_A_pairs = generate_D_A_pairs(t, m, s, b)
+    for D, A_list in D_A_pairs.items():
+        for A in A_list:
             count = 0
+            lower_bounds = [Fraction(A[j], b**D[j]) for j in range(s)]
+            upper_bounds = [Fraction(A[j] + 1, b**D[j]) for j in range(s)]
             for point in points_fractions:
-                is_in_interval = True
-                for j in range(s):
-                    # Check if the point lies within the interval [a_j/b^d_j, (a_j+1)/b^d_j)
-                    if not (Fraction(A[j], b**D[j]) <= point[j] < Fraction(A[j] + 1, b**D[j])):
-                        is_in_interval = False
-                        break
-                if is_in_interval:
+                if all(lower_bounds[j] <= point[j] < upper_bounds[j] for j in range(s)):
                     count += 1
-
+            
             if count != b**t:
-                print(f"Check failed for interval D={D}, A={A}. Found {count} points, expected {b**t}.")
-                return False
+                return False 
                 
     return True
 
