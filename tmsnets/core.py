@@ -5,7 +5,118 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
-from itertools import product
+from itertools import combinations_with_replacement, permutations, product
+from typing import Dict, Tuple, List
+from fractions import Fraction
+
+def generate_D_vectors(t: int, m: int, s: int) -> np.ndarray:
+    """
+    Generates all possible integer vectors D = (d_1, ..., d_s) for a (t, m, s)-net.
+    These vectors satisfy d_i >= 0 and sum(d_i) = m - t, and they define the
+    elementary intervals used for the verification check.
+    """
+    n = m - t
+    D_list = []
+
+    for D in combinations_with_replacement(range(n + 1), s):
+        if sum(D) == n:
+            D_list.extend(set(permutations(D)))
+
+    D_array = np.array(D_list)
+    D_array = np.unique(D_array, axis=0)
+    
+    return D_array
+
+def generate_D_A_pairs(t: int, m: int, s: int, b: int) -> Dict[Tuple[int, ...], List[Tuple[int, ...]]]:
+    """
+    Generates a dictionary that maps each vector D to a list of all possible
+    corresponding vectors A. For a given D=(d_1, ..., d_s), a vector A is (a_1, ..., a_s) where 0 <= a_j < b^d_j for each j.
+    """
+    D_array = generate_D_vectors(t, m, s)
+
+    D_A_to_index = {}
+    for D in D_array:
+        A_list = [] 
+        A_ranges = [range(b ** d_i) for d_i in D]
+        for A in product(*A_ranges):
+            A_list.append(A) 
+
+        D_A_to_index[tuple(D)] = A_list 
+    return D_A_to_index
+
+def convert_points_to_fractions(points: np.ndarray, b: int) -> np.ndarray:
+    """
+    Converts an array of floating-point coordinates to an array of Fraction objects.
+    This is crucial for exact arithmetic when checking if points fall into b-adic intervals.
+    """
+    points_fractions = []
+    for point in points:
+        point_fractions = []
+        for x in point:
+            if isinstance(x, Fraction):
+                point_fractions.append(x)
+            else:
+                x_str = f"{x:.20f}"
+                x_str = x_str.rstrip('0').rstrip('.')
+                x_float = float(x_str)
+                if x_float < 1e-10:
+                    point_fractions.append(Fraction(0, 1))
+                elif x_float > 1 - 1e-10:
+                    point_fractions.append(Fraction(1, 1))
+                else:
+
+                    found = False
+                    for n in range(1, 15):
+                        denominator = b**n
+                        numerator = int(round(x_float * denominator))
+                        if abs(x_float - numerator / denominator) < 1e-10:
+                            point_fractions.append(Fraction(numerator, denominator))
+                            found = True
+                            break
+                    if not found:
+                        point_fractions.append(Fraction(x_str))
+        points_fractions.append(point_fractions)
+    return np.array(points_fractions)
+
+def check_tms_network(points: np.ndarray, t: int, m: int, s: int, b: int) -> bool:
+    """
+    Checks whether the set of points forms a (t,m,s)-net in base b.
+    Returns True if the points form a (t,m,s)-net, False otherwise.
+
+    :param points: An array of points to be checked for the (t, m, s)-net property.
+    :param t: The quality parameter t.
+    :param m: The number of points in the net is b^m.
+    :param s: The dimension of the net.
+    :param b: The base of the (t, m, s)-net.
+    """
+
+    if points.shape[0] != b**m:
+        print(f"Error: Expected {b**m} points, but got {points.shape[0]}.")
+        return False
+        
+    points_fractions = convert_points_to_fractions(points, b)
+    
+    D_A_to_index = generate_D_A_pairs(t, m, s, b)
+    
+    unique_D = list(D_A_to_index.keys())
+    for D in unique_D:
+        for A in D_A_to_index[D]:
+            count = 0
+            for point in points_fractions:
+                is_in_interval = True
+                for j in range(s):
+                    # Check if the point lies within the interval [a_j/b^d_j, (a_j+1)/b^d_j)
+                    if not (Fraction(A[j], b**D[j]) <= point[j] < Fraction(A[j] + 1, b**D[j])):
+                        is_in_interval = False
+                        break
+                if is_in_interval:
+                    count += 1
+
+            if count != b**t:
+                print(f"Check failed for interval D={D}, A={A}. Found {count} points, expected {b**t}.")
+                return False
+                
+    return True
 
 class TMSNet:
     """
@@ -56,6 +167,41 @@ class TMSNet:
             sns.scatterplot(data=df, x="x", y="y", s=20).set_title(f'({self.t}, {self.m}, {self.s})-сеть (первые 2 измерения)')
             plt.grid(True)
             plt.show()
+
+    def verify(self) -> bool:
+        """
+        Checks whether a set of points is a (t,m,s)-network.If the check with the initial 't' fails,
+        the function finds the smallest possible value of t for which the points form a valid network and updates self.t.
+        """
+        print(f"--- Starting verification for t = {self.t}... ---")
+
+        if self.points.shape[0] != self.b**self.m:
+            print(f"Critical error: For a (t, m, s)-network of radix {self.b} with m={self.m} there should be {self.b**self.m} points, but {self.points.shape[0]} is provided.")
+            print("Verification interrupted.")
+            return False
+
+        points_fractions = convert_points_to_fractions(self.points, self.b)
+
+        best_t_found = -1
+        for new_t in range(self.m + 1):
+            if _is_tms_network(points_fractions, new_t, self.m, self.s, self.b):
+                best_t_found = new_t
+                break
+
+        if best_t_found == -1:
+            print("Verification failed: No suitable value for t could be found.")
+            return False
+        if best_t_found == self.t:
+            print(f"Verification is successful: the points indeed form a ({self.t}, {self.m}, {self.s})-network.")
+            return True
+        else:
+            old_t = self.t
+            self.t = best_t_found
+            print(f"Initial check for t={old_t} failed.")
+            print(f"---Updating---")
+            print(f"The best value of t for a given set of points is found: t = {self.t}.")
+            print(f"The object's t parameter was updated from {old_t} to {self.t}.")
+            return True
 
 
 class PolynomialNetConstructor:
