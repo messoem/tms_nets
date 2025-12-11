@@ -3,6 +3,7 @@ import itertools
 from deap import base, creator, tools, algorithms
 from random import randint
 from itertools import combinations
+import galois
 
 def compute_digits_matrix1(N, b, m1):
 
