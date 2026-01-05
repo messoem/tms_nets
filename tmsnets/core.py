@@ -227,7 +227,8 @@ class PolynomialNetConstructor:
     @staticmethod
     def _e_param(t, m, s):
     """
-    Creates an array of length s that specifies the required degrees of polynomials for each dimension for the _generate_generator_matrices() method.
+    Creates an array of length s that specifies the required degrees of polynomials for each dimension for the 
+    _generate_generator_matrices() method.
 
     :param t: quality measure of (t, m, s)-net.
     :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
@@ -248,7 +249,8 @@ class PolynomialNetConstructor:
     @staticmethod
     def _generate_excellent_poly(b, e):
     """
-    Using the methods of the galois library, creates an array of length s containing distinct irreducible polynomials of the degrees specified by parameter e.  
+    Using the methods of the galois library, creates an array of length s containing distinct irreducible polynomials of the degrees 
+    specified by parameter e.  
     Raises an error if GF(b) does not contain the required number of irreducible polynomials.
 
     :param b: base of (t, m, s)-net.
@@ -278,7 +280,8 @@ class PolynomialNetConstructor:
     def _generate_recurrent_sequence(poly, u, m):
     """
     Returns a recurrent sequence of length m + u * deg(poly).  
-    Its first u * deg(poly) elements specify the initial conditions (with a specific structure, including 1 in a certain position), while the subsequent m elements are generated recursively based on the polynomial poly raised to the power u.
+    Its first u * deg(poly) elements specify the initial conditions (with a specific structure, including 1 in a certain position), 
+    while the subsequent m elements are generated recursively based on the polynomial poly raised to the power u.
 
     :param poly: polynomial based on which the linear recurrent sequence is generated.
     :param u: required power to which the polynomial poly is raised.
@@ -304,7 +307,8 @@ class PolynomialNetConstructor:
     @staticmethod
     def _build_generator_matrix(poly, m):
     """
-    Constructs a generating matrix using the generating polynomial poly, dividing the matrix into (m + e - 1) // e sections, where the elements in each section are computed using a recurrent sequence based on poly and the degree i, where i is the section number.
+    Constructs a generating matrix using the generating polynomial poly, dividing the matrix into (m + e - 1) // e sections, 
+    where the elements in each section are computed using a recurrent sequence based on poly and the degree i, where i is the section number.
 
     :param poly: polynomial based on which the matrix is generated.
     :param m: resolution of the net, determines the dimensions of the matrix and parameter for generating matrix
@@ -328,7 +332,8 @@ class PolynomialNetConstructor:
     """
     Creates an array of s matrices required for constructing a (t,m,s)-net using the Niederreiter algorithm.  
     Generated using s irreducible polynomials of the specified degrees.  
-    For each matrix, a distinct polynomial is used, which is raised to various powers to define recurrent sequences that fill the sections of the matrix.
+    For each matrix, a distinct polynomial is used, which is raised to various powers to define recurrent sequences that fill 
+    the sections of the matrix.
 
     :param b: base of (t, m, s)-net. Using for calculation over GF(b).
     :param t: quality measure of (t, m, s)-net.
@@ -431,7 +436,8 @@ class PolynomialNetConstructor:
 ‎    :param q: base of (0, m, s)-net. Using for calculation over GF(q).
     :param m: the number of points in the (0, m, s)-net is characterized as q^m
 ‎    :param s: dimension of (0, m, s)net
-‎    :param beta: an optional parameter that describes the conversion of elements of the field GF(q) to float numbers. By default, the identity mapping is used.
+‎    :param beta: an optional parameter that describes the conversion of elements of the field GF(q) to float numbers. By default, 
+    the identity mapping is used.
 ‎    """
         GF = galois.GF(q)
 
