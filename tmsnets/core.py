@@ -11,8 +11,15 @@ from fractions import Fraction
 
 def generate_D_vectors(t: int, m: int, s: int) -> np.ndarray:
     """
-    Generates all possible integer vectors D = (d_1, ..., d_s) for a (t, m, s)-net.
-    These vectors satisfy d_i >= 0 and sum(d_i) = m - t, and they define the elementary intervals used for the verification check.
+    Generates all possible integer vectors D = (d_1, ..., d_s) for a (t, m, s)-net. 
+    Each vector D defines a partition of the multidimensional cube into elementary intervals for verification and satisfies 
+    the following conditions:  
+    1) d_i >= 0 for all i in {1, ..., s},  
+    2) the sum of the coordinates of D satisfies sum(d_i) = m - t for i in {1, ..., s}.
+
+    :param t: quality measure of (t, m, s)-net.
+    :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
+    :param s: dimension of (t, m, s)-net.
     """
     n = m - t
     D_list = []
@@ -24,8 +31,14 @@ def generate_D_vectors(t: int, m: int, s: int) -> np.ndarray:
 
 def generate_D_A_pairs(t: int, m: int, s: int, b: int) -> Dict[Tuple[int, ...], List[Tuple[int, ...]]]:
     """
-    Generates a dictionary that maps each vector D to a list of all possible corresponding vectors A.
-    For a given D=(d_1, ..., d_s), a vector A is (a_1, ..., a_s) where 0 <= a_j < b^d_j for each j.
+    Generates a dictionary that maps each vector D to a list of all possible corresponding vectors A, 
+    which define a specific elementary interval for the partition D by specifying the interval index along each dimension. 
+    For a given D = (d_1, ..., d_s), a vector A = (a_1, ..., a_s) satisfies: 0 <= a_j < b^d_j for each j in {1, ..., s}.
+
+    :param t: quality measure of (t, m, s)-net.
+    :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
+    :param s: dimension of (t, m, s)-net.
+    :param b: base of (t, m, s)-net. Using for calculation over GF(b).
     """
     D_array = generate_D_vectors(t, m, s)
     D_A_to_index = {}
@@ -38,6 +51,9 @@ def convert_points_to_fractions(points: np.ndarray, b: int) -> np.ndarray:
     """
     Converts an array of floating-point coordinates to an array of Fraction objects.
     This is crucial for exact arithmetic when checking if points fall into b-adic intervals.
+
+    :param points: input array (of type numpy.ndarray) of float numbers.
+    :param b: base of the (t, m, s)-net, necessary for checking whether the input points lie on the boundaries of intervals.
     """
     points_fractions = []
     for point in points:
@@ -67,14 +83,16 @@ def convert_points_to_fractions(points: np.ndarray, b: int) -> np.ndarray:
 
 def _is_tms_network(points_fractions: np.ndarray, t: int, m: int, s: int, b: int) -> bool:
     """
-    Checks whether the set of points forms a (t,m,s)-net in base b.
-    Returns True if the points form a (t,m,s)-net, False otherwise.
+    Checks whether the set of points forms a (t,m,s)-net in base b.  
+    For each elementary interval A in the partition D, checks the number of points contained within it 
+    (for a valid net, the number of points in each interval equals b**t).  
+    Returns True if the points form a (t,m,s)-net, otherwise False.  
 
-    :param points: An array of points to be checked for the (t, m, s)-net property.
-    :param t: The quality parameter t.
-    :param m: The number of points in the net is b^m.
-    :param s: The dimension of the net.
-    :param b: The base of the (t, m, s)-net.
+    :param points: an array of points to be checked for the (t,m,s)-net property.  
+    :param t: quality measure of (t, m, s)-net.
+    :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
+    :param s: dimension of (t, m, s)-net.
+    :param b: base of (t, m, s)-net. Using for calculation over GF(b).
     """
     D_A_pairs = generate_D_A_pairs(t, m, s, b)
     for D, A_list in D_A_pairs.items():
@@ -208,6 +226,13 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def _e_param(t, m, s):
+    """
+    Creates an array of length s that specifies the required degrees of polynomials for each dimension for the _generate_generator_matrices() method.
+
+    :param t: quality measure of (t, m, s)-net.
+    :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
+    :param s: dimension of (t, m, s)-net.
+    """
         n = t + s
         x = s
         if n < x: return None
@@ -221,7 +246,14 @@ class PolynomialNetConstructor:
         return result
 
     @staticmethod
-    def _generate_excellent_poly(b, e, s):
+    def _generate_excellent_poly(b, e):
+    """
+    Using the methods of the galois library, creates an array of length s containing distinct irreducible polynomials of the degrees specified by parameter e.  
+    Raises an error if GF(b) does not contain the required number of irreducible polynomials.
+
+    :param b: base of (t, m, s)-net.
+    :param e: an array with required degrees of polynomials.
+    """
         assert PolynomialNetConstructor.is_prime_power(b), "b must be a prime power"
         pi = []
         unique_polys = {degree: set() for degree in set(e)}
@@ -244,6 +276,14 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def _generate_recurrent_sequence(poly, u, m):
+    """
+    Returns a recurrent sequence of length m + u * deg(poly).  
+    Its first u * deg(poly) elements specify the initial conditions (with a specific structure, including 1 in a certain position), while the subsequent m elements are generated recursively based on the polynomial poly raised to the power u.
+
+    :param poly: polynomial based on which the linear recurrent sequence is generated.
+    :param u: required power to which the polynomial poly is raised.
+    :param m: resolution of the net, determines the number of terms generated by the recurrent sequence.
+    """
         e = poly.degree
         degree = e * u
 
@@ -263,6 +303,12 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def _build_generator_matrix(poly, m):
+    """
+    Constructs a generating matrix using the generating polynomial poly, dividing the matrix into (m + e - 1) // e sections, where the elements in each section are computed using a recurrent sequence based on poly and the degree i, where i is the section number.
+
+    :param poly: polynomial based on which the matrix is generated.
+    :param m: resolution of the net, determines the dimensions of the matrix and parameter for generating matrix
+    """
         e = poly.degree
         num_sections = (m + e - 1) // e  
         G = np.zeros((m, m), dtype=int)
@@ -279,6 +325,16 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def _generate_generator_matrices(b, t, m, s, verbose=False):
+    """
+    Creates an array of s matrices required for constructing a (t,m,s)-net using the Niederreiter algorithm.  
+    Generated using s irreducible polynomials of the specified degrees.  
+    For each matrix, a distinct polynomial is used, which is raised to various powers to define recurrent sequences that fill the sections of the matrix.
+
+    :param b: base of (t, m, s)-net. Using for calculation over GF(b).
+    :param t: quality measure of (t, m, s)-net.
+    :param m: resolution of the net, controlling the number of points (N = b^m, where b is the base).
+    :param s: dimension of (t, m, s)-net.
+    """
         e = PolynomialNetConstructor._e_param(t, m, s)
         assert e is not None, "Wrong params: t, m, s"
         assert t <= m, "t must be less or equal m"
@@ -294,12 +350,12 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def _vecbm_opt(b, m, n):
-        """
-        Converts an array of numbers n to their b-ary representations of fixed length m
+    """        
+    Converts an array of numbers n to their b-ary representations of fixed length m        
 
-        :param b: base of (t, m, s)-net. Using for calculation over GF(b).
-        :param m: the number of points in the (t, m, s)-net is characterized as b^m
-        """
+    :param b: base of (t, m, s)-net. Using for calculation over GF(b).        
+    :param m: the number of points in the (t, m, s)-net is characterized as b^m        
+    """
         n = np.asarray(n) 
         shape = n.shape
         n = n.ravel()
@@ -309,14 +365,33 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def construct_niederreiter(b, t, m, s, verbose=False):
-        """
-        Constructing (t, m, s)-net via Niederreiter algorithm
+    """    
+    Constructing (t, m, s)-net via Niederreiter algorithm    
 
-        :param b: base of (t, m, s)-net. Using for calculation over GF(b).
-        :param t: quality measure of (t, m, s)-net.
-        :param m: the number of points in the (t, m, s)-net is characterized as b^m
-        :param s: dimension of (t, m, s)-net
-        """
+    Using the galois library, s distinct irreducible polynomials are created over this field, 
+    after which the following algorithm is executed to construct each of the generating matrices G[i]:  
+
+    A polynomial, say pi, with degree deg(pi) = e, is taken.  
+    The matrix is divided into (m + e - 1) // e sections by rows, each section containing e rows: 
+    the first [0; e), the second [e; 2e), and so on.  
+
+    Each u-th section corresponds to a linear recurrent sequence a_i(u) of order e*u with the characteristic polynomial pi**u, 
+    and the initial elements are defined according to the following rule:  
+    • a_i(u) = 0 for i in [0; e*(u-1)).  
+    • Among the elements with indices i in [e*(u-1); e*u), at least one element is non-zero.  
+
+    Next, each number n from 0 to b**m - 1 is converted into its representation vec_b,m(n) as a vector of length m in base b 
+    (the digits of the number n in the base-b numeral system).  
+    The coordinates of the n-th point are computed as follows:  
+    x_n[i] = rnum_b(G[i]*vec_b,m(n)) * b**(-m).  
+
+    The resulting array of points forms a (t,m,s)-net in base b.   
+
+    :param b: base of (t, m, s)-net. Using for calculation over GF(b).    
+    :param t: quality measure of (t, m, s)-net.    
+    :param m: the number of points in the (t, m, s)-net is characterized as b^m      
+    :param s: dimension of (t, m, s)-net 
+    """
         gf = galois.GF(b)
         G = PolynomialNetConstructor._generate_generator_matrices(b, t, m, s, verbose)
         if verbose:
@@ -339,13 +414,25 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def construct_rosenbloom_tsfasman(q, m, s, beta=None):
-        """
-        Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.Due to its combinatorial nature, this method takes a long time to work.
-
-        :param q: base of (0, m, s)-net. Using for calculation over GF(q).
-        :param m: the number of points in the (0, m, s)-net is characterized as q^m
-        :param s: dimension of (0, m, s)-net
-        """
+‎    """
+‎    Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.
+    ‎Due to its combinatorial nature, this method takes a long time to work.
+‎
+    ‎The field GF(q) is created, and the first s elements are taken from it (an exception is raised if s > q).  
+    ‎If beta (a dictionary mapping field elements to real numbers) is specified, a lookup function or vectorized function is created to convert 
+    field elements to floating-point numbers. By default, beta is None, meaning field elements are used directly (converted to float numbers).  
+‎    Next, all possible tuples of coefficients for polynomials of degree up to m-1 over GF(q) are generated.  
+    ‎Using galois.Poly, the coefficient tuples are converted into polynomials.  
+    ‎For each polynomial, its values and derivatives up to order m-1 are computed at the first s elements of the field GF(q), 
+    and the results are stored in an s×m matrix of field elements represented as integers.  
+    ‎If beta is specified, the matrix elements are converted to float numbers.
+    ‎The coordinates of each point are computed as a weighted sum with weights from q^(-1) to q^(-m).
+‎
+‎    :param q: base of (0, m, s)-net. Using for calculation over GF(q).
+    :param m: the number of points in the (0, m, s)-net is characterized as q^m
+‎    :param s: dimension of (0, m, s)net
+‎    :param beta: an optional parameter that describes the conversion of elements of the field GF(q) to float numbers. By default, the identity mapping is used.
+‎    """
         GF = galois.GF(q)
 
         if s > q:
