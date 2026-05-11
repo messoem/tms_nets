@@ -419,17 +419,17 @@ class PolynomialNetConstructor:
 
     @staticmethod
     def construct_rosenbloom_tsfasman(q, m, s, beta=None):
-        """
-        Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.
-        ‎Due to its combinatorial nature, this method takes a long time to work.
-        ‎The field GF(q) is created, and the first s elements are taken from it (an exception is raised if s > q).  
-        ‎If beta (a dictionary mapping field elements to real numbers) is specified, a lookup function or vectorized function is created to convert 
-        field elements to floating-point numbers. By default, beta is None, meaning field elements are used directly (converted to float numbers).  
-    ‎    Next, all possible tuples of coefficients for polynomials of degree up to m-1 over GF(q) are generated.  
-        ‎Using galois.Poly, the coefficient tuples are converted into polynomials.  
-        ‎For each polynomial, its values and derivatives up to order m-1 are computed at the first s elements of the field GF(q), 
-        and the results are stored in an s×m matrix of field elements represented as integers.  
-        ‎If beta is specified, the matrix elements are converted to float numbers.
+    """
+    Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.
+    Due to its combinatorial nature, this method takes a long time to work.
+    The field GF(q) is created, and the first s elements are taken from it (an exception is raised if s > q).  
+    ‎If beta (a dictionary mapping field elements to real numbers) is specified, a lookup function or vectorized function is created to convert 
+    field elements to floating-point numbers. By default, beta is None, meaning field elements are used directly (converted to float numbers).  
+    ‎Next, all possible tuples of coefficients for polynomials of degree up to m-1 over GF(q) are generated.  
+    ‎Using galois.Poly, the coefficient tuples are converted into polynomials.  
+    ‎For each polynomial, its values and derivatives up to order m-1 are computed at the first s elements of the field GF(q), 
+    and the results are stored in an s×m matrix of field elements represented as integers.  
+    If beta is specified, the matrix elements are converted to float numbers.
         ‎The coordinates of each point are computed as a weighted sum with weights from q^(-1) to q^(-m).
     ‎
     ‎    :param q: base of (0, m, s)-net. Using for calculation over GF(q).
