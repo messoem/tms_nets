@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Reference &mdash; tms_nets  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
@@ -99,6 +99,20 @@
 <dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.construct_niederreiter">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_niederreiter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_niederreiter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.construct_niederreiter" title="Link to this definition"></a></dt>
 <dd><p>Constructing (t, m, s)-net via Niederreiter algorithm</p>
+<p>Using the galois library, s distinct irreducible polynomials are created over this field,
+after which the following algorithm is executed to construct each of the generating matrices G[i]:</p>
+<p>A polynomial, say pi, with degree deg(pi) = e, is taken.
+The matrix is divided into (m + e - 1) // e sections by rows, each section containing e rows:
+the first [0; e), the second [e; 2e), and so on.</p>
+<p>Each u-th section corresponds to a linear recurrent sequence a_i(u) of order e*u with the characteristic polynomial pi**u,
+and the initial elements are defined according to the following rule:
+• a_i(u) = 0 for i in [0; e*(u-1)).
+• Among the elements with indices i in [e*(u-1); e*u), at least one element is non-zero.</p>
+<p>Next, each number n from 0 to b**m - 1 is converted into its representation vec_b,m(n) as a vector of length m in base b
+(the digits of the number n in the base-b numeral system).
+The coordinates of the n-th point are computed as follows:
+x_n[i] = rnum_b(G[i]*vec_b,m(n)) * b**(-m).</p>
+<p>The resulting array of points forms a (t,m,s)-net in base b.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -114,14 +128,31 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="tmsnets.core.PolynomialNetConstructor.construct_rosenbloom_tsfasman">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">construct_rosenbloom_tsfasman</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tmsnets/core.html#PolynomialNetConstructor.construct_rosenbloom_tsfasman"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.PolynomialNetConstructor.construct_rosenbloom_tsfasman" title="Link to this definition"></a></dt>
-<dd><p>Constructs a (0, m, s)-network using the Rosenblum-Tsfasman method.Due to its combinatorial nature, this method takes a long time to work.</p>
+<dd><p>Constructs a (0, m, s)-network using the Rosenbloom-Tsfasman method.</p>
+<p>Due to its combinatorial nature, this method takes a long time to work.</p>
+<p>The field GF(q) is created, and the first s elements are taken from it.
+An exception is raised if s &gt; q.</p>
+<p>If beta (a dictionary mapping field elements to real numbers) is specified,
+a conversion function is created to map field elements to floating-point numbers.
+By default, beta is None, meaning field elements are used directly.</p>
+<p>Next, all possible tuples of coefficients for polynomials of degree up to
+m - 1 over GF(q) are generated.</p>
+<p>Using galois.Poly, the coefficient tuples are converted into polynomials.</p>
+<p>For each polynomial, its values and derivatives up to order m - 1 are
+computed at the first s elements of GF(q).</p>
+<p>The coordinates of each point are computed as a weighted sum with weights
+from q^(-1) to q^(-m).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>q</strong> – base of (0, m, s)-net. Using for calculation over GF(q).</p></li>
-<li><p><strong>m</strong> – the number of points in the (0, m, s)-net is characterized as q^m</p></li>
-<li><p><strong>s</strong> – dimension of (0, m, s)-net</p></li>
+<li><p><strong>q</strong> – base of (0, m, s)-net.</p></li>
+<li><p><strong>m</strong> – number of points is q^m.</p></li>
+<li><p><strong>s</strong> – dimension of the net.</p></li>
+<li><p><strong>beta</strong> – optional mapping from GF(q) elements to float numbers.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>array of generated points.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -174,20 +205,51 @@ Supports both 2D and 3D cases.</p>
 <span class="sig-prename descclassname"><span class="pre">tmsnets.core.</span></span><span class="sig-name descname"><span class="pre">convert_points_to_fractions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/tmsnets/core.html#convert_points_to_fractions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.convert_points_to_fractions" title="Link to this definition"></a></dt>
 <dd><p>Converts an array of floating-point coordinates to an array of Fraction objects.
 This is crucial for exact arithmetic when checking if points fall into b-adic intervals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – input array (of type numpy.ndarray) of float numbers.</p></li>
+<li><p><strong>b</strong> – base of the (t, m, s)-net, necessary for checking whether the input points lie on the boundaries of intervals.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tmsnets.core.generate_D_A_pairs">
 <span class="sig-prename descclassname"><span class="pre">tmsnets.core.</span></span><span class="sig-name descname"><span class="pre">generate_D_A_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/tmsnets/core.html#generate_D_A_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.generate_D_A_pairs" title="Link to this definition"></a></dt>
-<dd><p>Generates a dictionary that maps each vector D to a list of all possible corresponding vectors A.
-For a given D=(d_1, …, d_s), a vector A is (a_1, …, a_s) where 0 &lt;= a_j &lt; b^d_j for each j.</p>
+<dd><p>Generates a dictionary that maps each vector D to a list of all possible corresponding vectors A,
+which define a specific elementary interval for the partition D by specifying the interval index along each dimension.
+For a given D = (d_1, …, d_s), a vector A = (a_1, …, a_s) satisfies: 0 &lt;= a_j &lt; b^d_j for each j in {1, …, s}.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – resolution of the net, controlling the number of points (N = b^m, where b is the base).</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net.</p></li>
+<li><p><strong>b</strong> – base of (t, m, s)-net. Using for calculation over GF(b).</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tmsnets.core.generate_D_vectors">
 <span class="sig-prename descclassname"><span class="pre">tmsnets.core.</span></span><span class="sig-name descname"><span class="pre">generate_D_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/tmsnets/core.html#generate_D_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tmsnets.core.generate_D_vectors" title="Link to this definition"></a></dt>
 <dd><p>Generates all possible integer vectors D = (d_1, …, d_s) for a (t, m, s)-net.
-These vectors satisfy d_i &gt;= 0 and sum(d_i) = m - t, and they define the elementary intervals used for the verification check.</p>
+Each vector D defines a partition of the multidimensional cube into elementary intervals for verification and satisfies
+the following conditions:
+1) d_i &gt;= 0 for all i in {1, …, s},
+2) the sum of the coordinates of D satisfies sum(d_i) = m - t for i in {1, …, s}.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> – quality measure of (t, m, s)-net.</p></li>
+<li><p><strong>m</strong> – resolution of the net, controlling the number of points (N = b^m, where b is the base).</p></li>
+<li><p><strong>s</strong> – dimension of (t, m, s)-net.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
